@@ -3,7 +3,7 @@
         AddToPath  = $true
         Target     = 'output\RequiredModules'
         Parameters = @{
-            Repository = ''
+            Repository = 'PSGallery'
         }
     }
 
@@ -16,9 +16,9 @@
     Sampler                     = 'latest'
     'Sampler.GitHubTasks'       = 'latest'
     MarkdownLinkCheck           = 'latest'
+    'DscResource.Common'        = 'latest'
     'DscResource.Test'          = 'latest'
     'DscResource.AnalyzerRules' = 'latest'
-    'DscResource.DocGenerator'  = 'latest'
-    'DscResource.Common'        = 'latest'
     xDscResourceDesigner        = 'latest'
+    'DscResource.DocGenerator'  = 'latest'
 }

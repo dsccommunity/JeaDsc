@@ -28,10 +28,7 @@
 
     AliasesToExport      = @()
 
-    DscResourcesToExport = @(
-        'JeaSessionConfiguration'
-        'JeaRoleCapabilities'
-    )
+    DscResourcesToExport = @()
 
     PrivateData          = @{
 
