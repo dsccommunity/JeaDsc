@@ -74,6 +74,7 @@ Pester:
 DscTest:
   ExcludeTag:
     - "Common Tests - New Error-Level Script Analyzer Rules"
+    - "Common Tests - Validate Example Files"
   Tag:
   ExcludeSourceFile:
     - output
