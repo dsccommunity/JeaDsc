@@ -41,10 +41,8 @@
 - [ ] Added an entry to the change log under the Unreleased section of the file CHANGELOG.md.
       Entry should say what was changed and how that affects users (if applicable), and
       reference the issue being resolved (if applicable).
-- [ ] Resource documentation added/updated in README.md.
-- [ ] Resource parameter descriptions added/updated in README.md, schema.mof and comment-based
-      help.
-- [ ] Comment-based help added/updated.
+- [ ] Resource documentation added/updated in comment-based help.
+- [ ] Resource parameter descriptions added/updated in comment-based help.
 - [ ] Localization strings added/updated in all localization files as appropriate.
 - [ ] Examples appropriately added/updated.
 - [ ] Unit tests added/updated. See [DSC Community Testing Guidelines](https://dsccommunity.org/guidelines/testing-guidelines).
