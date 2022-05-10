@@ -75,6 +75,7 @@ DscTest:
   ExcludeTag:
     - "Common Tests - New Error-Level Script Analyzer Rules"
     - "Common Tests - Validate Example Files"
+    - "Common Tests - Validate Example Files To Be Published"
   Tag:
   ExcludeSourceFile:
     - output
