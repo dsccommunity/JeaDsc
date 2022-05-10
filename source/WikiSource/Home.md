@@ -13,7 +13,6 @@ transcription and logging. JEA is included in PowerShell version 5 and higher
 on Windows 10 and Windows Server 2016, and older OSes with the Windows Management
 Framework updates.
 
-
 This repository contains sample role capabilities created by the Microsoft IT
 team and the official DSC resource that can be used to deploy JEA across your enterprise.
 General information and documentation for JEA can be found at [Microsoft Docs](https://docs.microsoft.com/en-us/powershell/scripting/learn/remoting/jea/overview).
@@ -22,7 +21,7 @@ General information and documentation for JEA can be found at [Microsoft Docs](h
 
 Microsoft IT have been working with JEA since its inception and have shared
 some of their role capabilities for general server and IIS maintenance/support.
-[Check them out](https://github.com/dsccommunity/JeaDsc/tree/master/Samples)
+[Check them out](https://github.com/dsccommunity/JeaDsc/tree/master/source/Examples)
 to learn more about how to create role capability files or download them to
 use in your own environment.
 

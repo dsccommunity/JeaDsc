@@ -41,5 +41,5 @@ To find out more about JEA, see documentation at [Microsoft Docs](https://docs.m
 
 ### Examples
 
-You can review the [Samples](/source/Samples) directory in the JeaDsc repository
+You can review the [Examples](/source/Examples) directory in the JeaDsc repository
 for some general use scenarios for all of the resources that are in the module.
