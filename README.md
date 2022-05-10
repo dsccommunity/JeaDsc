@@ -45,24 +45,3 @@ You can review the [Examples](/source/Examples) directory in the JeaDsc module
 for some general use scenarios for all of the resources that are in the module.
 
 The resource examples are also available in the [JeaDsc Wiki](https://github.com/dsccommunity/JeaDsc/wiki).
-
-## Just Enough Administration Samples and Resources
-
-Just Enough Administration (JEA) is a PowerShell security technology that provides a role based access control platform for anything that can be managed with PowerShell.
-It enables authorized users to run specific commands in an elevated context on a remote machine, complete with full PowerShell transcription and logging.
-JEA is included in PowerShell version 5 and higher on Windows 10 and Windows Server 2016, and older OSes with the Windows Management Framework updates.
-
-This repository contains sample role capabilities created by the Microsoft IT team and the official DSC resource that can be used to deploy JEA across your enterprise.
-General information and documentation for JEA has migrated to [MSDN](http://aka.ms/JEAdocs).
-
-## DSC Resource
-
-The [JEA DSC resource](https://github.com/dsccommunity/JeaDsc/tree/master/DSCClassResources) can help you quickly and consistently deploy JEA endpoints across your enterprise.
-The *JeaSessionConfiguration* DSC resource configures the PowerShell session configurations, which define the mapping of users to roles and general session security settings. *Note:* Scriptblock logging is not enabled by this resource and should be done using the [registry resource](https://docs.microsoft.com/en-us/powershell/dsc/registryresource).
-The *JeaRoleCapabilities* DSC resource creates the Role Capabilities file in the specified location using the specified settings.
-Check out the [Demo Config](https://github.com/dsccommunity/JeaDsc) for an example of how to deploy a JEA endpoint using these DSC resources.
-
-## Sample Role Capabilities
-
-Microsoft IT have been working with JEA since its inception and have shared some of their role capabilities for general server and IIS maintenance/support.
-[Check them out](./Samples) to learn more about how to create role capability files or download them to use in your own environment!

@@ -1,3 +1,8 @@
+<#
+    .DESCRIPTION
+        Parent class for DSC resource JeaRoleCapabilities.
+#>
+
 $modulePath = Join-Path -Path $PSScriptRoot -ChildPath Modules
 
 Import-Module -Name (Join-Path -Path $modulePath -ChildPath DscResource.Common)

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Moved documentation from README.md to the GitHub repository Wiki.
 - Moving the class based resources from nested modules to root module.
 - Moving LocalizedData of class based resources in .strings.psd1 files.
 Based on [style guidelines](https://dsccommunity.org/styleguidelines/localization/) of DscCommunity.

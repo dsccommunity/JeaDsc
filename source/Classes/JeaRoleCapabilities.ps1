@@ -1,90 +1,145 @@
+<#
+    .SYNOPSIS
+        The JeaRoleCapabilities DSC resource creates the Role Capabilities file
+        in the specified location using the specified settings.
+
+    .DESCRIPTION
+        The JeaRoleCapabilities DSC resource creates the Role Capabilities file
+        in the specified location using the specified settings.
+
+    .PARAMETER Ensure
+        Specifies whether the Role Capabilities file should be created or removed
+        (not exist).
+
+    .PARAMETER Path
+        Where to store the file.
+
+    .PARAMETER ModulesToImport
+        Specifies the modules that are automatically imported into sessions that
+        use the role capability file. By default, all of the commands in listed
+        modules are visible. When used with VisibleCmdlets or VisibleFunctions,
+        the commands visible from the specified modules can be restricted.
+        Hashtable with keys ModuleName, ModuleVersion and GUID.
+
+    .PARAMETER VisibleAliases
+        Limits the aliases in the session to those aliases specified in the value
+        of this parameter, plus any aliases that you define in the AliasDefinition
+        parameter. Wildcard characters are supported. By default, all aliases that
+        are defined by the Windows PowerShell engine and all aliases that modules
+        export are visible in the session.
+
+    .PARAMETER VisibleCmdlets
+        Limits the cmdlets in the session to those specified in the value of this
+        parameter. Wildcard characters and Module Qualified Names are supported.
+
+    .PARAMETER VisibleFunctions
+        Limits the functions in the session to those specified in the value of this
+        parameter, plus any functions that you define in the FunctionDefinitions
+        parameter. Wildcard characters are supported.
+
+    .PARAMETER VisibleExternalCommands
+        Limits the external binaries, scripts and commands that can be executed in
+        the session to those specified in the value of this parameter. Wildcard
+        characters are supported.
+
+    .PARAMETER VisibleProviders
+        Limits the Windows PowerShell providers in the session to those specified
+        in the value of this parameter. Wildcard characters are supported.
+
+    .PARAMETER ScriptsToProcess
+        Specifies scripts to add to sessions that use the role capability file.
+
+    .PARAMETER AliasDefinitions
+        Adds the specified aliases to sessions that use the role capability file.
+        Hashtable with keys Name, Value, Description and Options.
+
+    .PARAMETER FunctionDefinitions
+        Adds the specified functions to sessions that expose the role capability.
+        Hashtable with keys Name, Scriptblock and Options.
+
+    .PARAMETER VariableDefinitions
+        Specifies variables to add to sessions that use the role capability file.
+        Hashtable with keys Name, Value, Options.
+
+    .PARAMETER EnvironmentVariables
+        Specifies the environment variables for sessions that expose this role
+        capability file. Hashtable of environment variables.
+
+    .PARAMETER TypesToProcess
+        Specifies type files (.ps1xml) to add to sessions that use the role
+        capability file. The value of this parameter must be a full or absolute
+        path of the type file names.
+
+    .PARAMETER FormatsToProcess
+        Specifies the formatting files (.ps1xml) that run in sessions that use the
+        role capability file. The value of this parameter must be a full or absolute
+        path of the formatting files.
+
+    .PARAMETER Description
+        Specifies the assemblies to load into the sessions that use the role
+        capability file.
+
+    .PARAMETER AssembliesToLoad
+        Description of the role.
+
+    .PARAMETER Reasons
+        Reasons of why the resource isn't in desired state.
+#>
+
 [DscResource()]
 class JeaRoleCapabilities:RoleCapabilitiesUtility
 {
-
     [DscProperty()]
     [Ensure]$Ensure = [Ensure]::Present
 
-    # Where to store the file.
     [DscProperty(Key)]
     [string]$Path
 
-    # Specifies the modules that are automatically imported into sessions that use the role capability file.
-    # By default, all of the commands in listed modules are visible. When used with VisibleCmdlets or VisibleFunctions,
-    # the commands visible from the specified modules can be restricted. Hashtable with keys ModuleName, ModuleVersion and GUID.
     [DscProperty()]
     [string[]]$ModulesToImport
 
-    # Limits the aliases in the session to those aliases specified in the value of this parameter,
-    # plus any aliases that you define in the AliasDefinition parameter. Wildcard characters are supported.
-    # By default, all aliases that are defined by the Windows PowerShell engine and all aliases that modules export are
-    # visible in the session.
     [DscProperty()]
     [string[]]$VisibleAliases
 
-    # Limits the cmdlets in the session to those specified in the value of this parameter.
-    # Wildcard characters and Module Qualified Names are supported.
     [DscProperty()]
     [string[]]$VisibleCmdlets
 
-    #  Limits the functions in the session to those specified in the value of this parameter,
-    # plus any functions that you define in the FunctionDefinitions parameter. Wildcard characters are supported.
     [DscProperty()]
     [string[]]$VisibleFunctions
 
-    # Limits the external binaries, scripts and commands that can be executed in the session to those specified in
-    # the value of this parameter. Wildcard characters are supported.
     [DscProperty()]
     [string[]]$VisibleExternalCommands
 
-    # Limits the Windows PowerShell providers in the session to those specified in the value of this parameter.
-    # Wildcard characters are supported.
     [DscProperty()]
     [string[]]$VisibleProviders
 
-    # Specifies scripts to add to sessions that use the role capability file.
     [DscProperty()]
     [string[]]$ScriptsToProcess
 
-    # Adds the specified aliases to sessions that use the role capability file.
-    # Hashtable with keys Name, Value, Description and Options.
     [DscProperty()]
     [string[]]$AliasDefinitions
 
-    # Adds the specified functions to sessions that expose the role capability.
-    # Hashtable with keys Name, Scriptblock and Options.
     [DscProperty()]
     [string[]]$FunctionDefinitions
 
-    # Specifies variables to add to sessions that use the role capability file.
-    # Hashtable with keys Name, Value, Options.
     [DscProperty()]
     [string[]]$VariableDefinitions
 
-    # Specifies the environment variables for sessions that expose this role capability file.
-    # Hashtable of environment variables.
     [DscProperty()]
     [string[]]$EnvironmentVariables
 
-    # Specifies type files (.ps1xml) to add to sessions that use the role capability file.
-    # The value of this parameter must be a full or absolute path of the type file names.
     [DscProperty()]
     [string[]]$TypesToProcess
 
-    # Specifies the formatting files (.ps1xml) that run in sessions that use the role capability file.
-    # The value of this parameter must be a full or absolute path of the formatting files.
     [DscProperty()]
     [string[]]$FormatsToProcess
 
-    # Specifies the assemblies to load into the sessions that use the role capability file.
     [DscProperty()]
     [string]$Description
 
-    # Description of the role
     [DscProperty()]
     [string[]]$AssembliesToLoad
 
-    # Reasons of why the resource isn't in desired state
     [DscProperty(NotConfigurable)]
     [Reason[]]$Reasons
 

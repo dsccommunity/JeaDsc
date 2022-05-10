@@ -1,147 +1,243 @@
+<#
+    .SYNOPSIS
+        The JeaSessionConfiguration DSC resource configures the PowerShell session
+        configurations, which define the mapping of users to roles and general
+        session security settings.
+
+    .DESCRIPTION
+        The JeaSessionConfiguration DSC resource configures the PowerShell session
+        configurations, which define the mapping of users to roles and general
+        session security settings.
+
+        >**Note:** Scriptblock logging is not enabled by this resource and should
+        >be done using the [registry resource](https://docs.microsoft.com/en-us/powershell/dsc/registryresource).
+
+
+    .PARAMETER Ensure
+       The optional state that ensures the endpoint is present or absent. The
+       default value is [Ensure]::Present.
+
+    .PARAMETER Name
+        The mandatory endpoint name. Uses 'Microsoft.PowerShell' by default.
+
+    .PARAMETER RoleDefinitions
+        The role definition map to be used for the endpoint. This should be a string
+        that represents the Hashtable used for the RoleDefinitions property in
+        `New-PSSessionConfigurationFile`, such as:
+        ```
+        RoleDefinitions = '@{ Everyone = @{ RoleCapabilities = "BaseJeaCapabilities" } }'
+        ```
+
+    .PARAMETER RunAsVirtualAccount
+        Run the endpoint under a Virtual Account.
+
+    .PARAMETER RunAsVirtualAccountGroups
+        The optional groups to be used when the endpoint is configured to run as a
+        Virtual Account
+
+    .PARAMETER GroupManagedServiceAccount
+        The optional Group Managed Service Account (GMSA) to use for this endpoint.
+        If configured, will disable the default behavior of running as a Virtual
+        Account.
+
+    .PARAMETER TranscriptDirectory
+        The optional directory for transcripts to be saved to.
+
+    .PARAMETER ScriptsToProcess
+        The optional startup script for the endpoint.
+
+    .PARAMETER SessionType
+        The optional session type for the endpoint.
+
+    .PARAMETER MountUserDrive
+        The optional switch to enable mounting of a restricted user drive.
+
+    .PARAMETER UserDriveMaximumSize
+        The optional size of the user drive. The default is 50MB.
+
+    .PARAMETER RequiredGroups
+        The optional expression declaring which domain groups (for example,
+        two-factor authenticated users) connected users must be members of. This
+        should be a string that represents the Hashtable used for the RequiredGroups
+        property in `New-PSSessionConfigurationFile`, such as:
+        ```
+        RequiredGroups = '@{ And = "RequiredGroup1", @{ Or = "OptionalGroup1", "OptionalGroup2" } }'
+        ```
+
+    .PARAMETER ModulesToImport
+        The optional modules to import when applied to a session. This should be
+        a string that represents a string, a Hashtable, or array of strings and/or
+        Hashtables.
+        ```
+        ModulesToImport = "'MyCustomModule', @{ ModuleName = 'MyCustomModule'; ModuleVersion = '1.0.0.0'; GUID = '4d30d5f0-cb16-4898-812d-f20a6c596bdf' }"
+        ```
+
+    .PARAMETER VisibleAliases
+        The optional aliases to make visible when applied to a session.
+
+    .PARAMETER VisibleCmdlets
+        The optional cmdlets to make visible when applied to a session. This should
+        be a string that represents a string, a Hashtable, or array of strings and/or
+        Hashtables.
+        ```
+        VisibleCmdlets = "'Invoke-Cmdlet1', @{ Name = 'Invoke-Cmdlet2'; Parameters = @{ Name = 'Parameter1'; ValidateSet = 'Item1', 'Item2' }, @{ Name = 'Parameter2'; ValidatePattern = 'L*' } }"
+        ```
+
+    .PARAMETER VisibleFunctions
+        The optional functions to make visible when applied to a session. This should
+        be a string that represents a string, a Hashtable, or array of strings and/or
+        Hashtables.
+        ```
+        VisibleFunctions = "'Invoke-Function1', @{ Name = 'Invoke-Function2'; Parameters = @{ Name = 'Parameter1'; ValidateSet = 'Item1', 'Item2' }, @{ Name = 'Parameter2'; ValidatePattern = 'L*' } }"
+        ```
+
+    .PARAMETER VisibleExternalCommands
+        The optional external commands (scripts and applications) to make visible when applied to a session.
+
+    .PARAMETER VisibleProviders
+        The optional providers to make visible when applied to a session.
+
+    .PARAMETER AliasDefinitions
+        The optional aliases to be defined when applied to a session. This should be
+        a string that represents a Hashtable or array of Hashtable.
+        ```
+        AliasDefinitions = "@{ Name = 'Alias1'; Value = 'Invoke-Alias1'}, @{ Name = 'Alias2'; Value = 'Invoke-Alias2'}"
+        ```
+
+    .PARAMETER FunctionDefinitions
+        The optional functions to define when applied to a session. This should be
+        a string that represents a Hashtable or array of Hashtable.
+        ```
+        FunctionDefinitions = "@{ Name = 'MyFunction'; ScriptBlock = { param($MyInput) $MyInput } }"
+        ```
+
+    .PARAMETER VariableDefinitions
+        The optional variables to define when applied to a session. This should be
+        a string that represents a Hashtable or array of Hashtable.
+        ```
+        VariableDefinitions = "@{ Name = 'Variable1'; Value = { 'Dynamic' + 'InitialValue' } }, @{ Name = 'Variable2'; Value = 'StaticInitialValue' }"
+        ```
+
+    .PARAMETER EnvironmentVariables
+        The optional environment variables to define when applied to a session.
+        This should be a string that represents a Hashtable.
+        ```
+        EnvironmentVariables = "@{ Variable1 = 'Value1'; Variable2 = 'Value2' }"
+        ```
+
+    .PARAMETER TypesToProcess
+        The optional type files (.ps1xml) to load when applied to a session.
+
+    .PARAMETER FormatsToProcess
+        The optional format files (.ps1xml) to load when applied to a session.
+
+    .PARAMETER AssembliesToLoad
+        The optional assemblies to load when applied to a session.
+
+    .PARAMETER LanguageMode
+        The optional language mode to load. Can be `'NoLanguage'` (recommended),
+        `'RestrictedLanguage'`, `'ConstrainedLanguage'`, or `'FullLanguage'` (Default).
+
+    .PARAMETER ExecutionPolicy
+        The optional ExecutionPolicy. Execution policy to apply when applied to a
+        session. `'Unrestricted'`, `'RemoteSigned'`, `'AllSigned'`, `'Restricted'`,
+        `'Default'`, `'Bypass'`, `'Undefined'`.
+
+    .PARAMETER HungRegistrationTimeout
+        The optional number of seconds to wait for registering the endpoint to complete.
+        Use `0` for no timeout. Default value is `10`.
+
+    .PARAMETER Reasons
+        Contains the not compliant properties detected in Get() method.
+#>
+
 [DscResource()]
 class JeaSessionConfiguration:SessionConfigurationUtility
 {
-    ## The optional state that ensures the endpoint is present or absent. The defualt value is [Ensure]::Present.
     [DscProperty()]
     [Ensure] $Ensure = [Ensure]::Present
 
-    ## The mandatory endpoint name. Use 'Microsoft.PowerShell' by default.
     [DscProperty(Key)]
     [string] $Name = 'Microsoft.PowerShell'
 
-    ## The role definition map to be used for the endpoint. This
-    ## should be a string that represents the Hashtable used for the RoleDefinitions
-    ## property in New-PSSessionConfigurationFile, such as:
-    ## RoleDefinitions = '@{ Everyone = @{ RoleCapabilities = "BaseJeaCapabilities" } }'
     [Dscproperty()]
     [string] $RoleDefinitions
 
-    ## run the endpoint under a Virtual Account
     [DscProperty()]
     [nullable[bool]] $RunAsVirtualAccount
 
-    ## The optional groups to be used when the endpoint is configured to
-    ## run as a Virtual Account
     [DscProperty()]
     [string[]] $RunAsVirtualAccountGroups
 
-    ## The optional Group Managed Service Account (GMSA) to use for this
-    ## endpoint. If configured, will disable the default behaviour of
-    ## running as a Virtual Account
     [DscProperty()]
     [string] $GroupManagedServiceAccount
 
-    ## The optional directory for transcripts to be saved to
     [DscProperty()]
     [string] $TranscriptDirectory
 
-    ## The optional startup script for the endpoint
     [DscProperty()]
     [string[]] $ScriptsToProcess
 
-    ## The optional session type for the endpoint
     [DscProperty()]
     [string] $SessionType
 
-    ## The optional switch to enable mounting of a restricted user drive
     [Dscproperty()]
     [bool] $MountUserDrive
 
-    ## The optional size of the user drive. The default is 50MB.
     [Dscproperty()]
     [long] $UserDriveMaximumSize
 
-    ## The optional expression declaring which domain groups (for example,
-    ## two-factor authenticated users) connected users must be members of. This
-    ## should be a string that represents the Hashtable used for the RequiredGroups
-    ## property in New-PSSessionConfigurationFile, such as:
-    ## RequiredGroups = '@{ And = "RequiredGroup1", @{ Or = "OptionalGroup1", "OptionalGroup2" } }'
     [Dscproperty()]
     [string[]] $RequiredGroups
 
-    ## The optional modules to import when applied to a session
-    ## This should be a string that represents a string, a Hashtable, or array of strings and/or Hashtables
-    ## ModulesToImport = "'MyCustomModule', @{ ModuleName = 'MyCustomModule'; ModuleVersion = '1.0.0.0'; GUID = '4d30d5f0-cb16-4898-812d-f20a6c596bdf' }"
     [Dscproperty()]
     [string[]] $ModulesToImport
 
-    ## The optional aliases to make visible when applied to a session
     [Dscproperty()]
     [string[]] $VisibleAliases
 
-    ## The optional cmdlets to make visible when applied to a session
-    ## This should be a string that represents a string, a Hashtable, or array of strings and/or Hashtables
-    ## VisibleCmdlets = "'Invoke-Cmdlet1', @{ Name = 'Invoke-Cmdlet2'; Parameters = @{ Name = 'Parameter1'; ValidateSet = 'Item1', 'Item2' }, @{ Name = 'Parameter2'; ValidatePattern = 'L*' } }"
     [Dscproperty()]
     [string[]] $VisibleCmdlets
 
-    ## The optional functions to make visible when applied to a session
-    ## This should be a string that represents a string, a Hashtable, or array of strings and/or Hashtables
-    ## VisibleFunctions = "'Invoke-Function1', @{ Name = 'Invoke-Function2'; Parameters = @{ Name = 'Parameter1'; ValidateSet = 'Item1', 'Item2' }, @{ Name = 'Parameter2'; ValidatePattern = 'L*' } }"
     [Dscproperty()]
     [string[]] $VisibleFunctions
 
-    ## The optional external commands (scripts and applications) to make visible when applied to a session
     [Dscproperty()]
     [string[]] $VisibleExternalCommands
 
-    ## The optional providers to make visible when applied to a session
     [Dscproperty()]
     [string[]] $VisibleProviders
 
-    ## The optional aliases to be defined when applied to a session
-    ## This should be a string that represents a Hashtable or array of Hashtable
-    ## AliasDefinitions = "@{ Name = 'Alias1'; Value = 'Invoke-Alias1'}, @{ Name = 'Alias2'; Value = 'Invoke-Alias2'}"
     [Dscproperty()]
     [string[]] $AliasDefinitions
 
-    ## The optional functions to define when applied to a session
-    ## This should be a string that represents a Hashtable or array of Hashtable
-    ## FunctionDefinitions = "@{ Name = 'MyFunction'; ScriptBlock = { param($MyInput) $MyInput } }"
     [Dscproperty()]
     [string[]] $FunctionDefinitions
 
-    ## The optional variables to define when applied to a session
-    ## This should be a string that represents a Hashtable or array of Hashtable
-    ## VariableDefinitions = "@{ Name = 'Variable1'; Value = { 'Dynamic' + 'InitialValue' } }, @{ Name = 'Variable2'; Value = 'StaticInitialValue' }"
     [Dscproperty()]
     [string] $VariableDefinitions
 
-    ## The optional environment variables to define when applied to a session
-    ## This should be a string that represents a Hashtable
-    ## EnvironmentVariables = "@{ Variable1 = 'Value1'; Variable2 = 'Value2' }"
     [Dscproperty()]
     [string] $EnvironmentVariables
 
-    ## The optional type files (.ps1xml) to load when applied to a session
     [Dscproperty()]
     [string[]] $TypesToProcess
 
-    ## The optional format files (.ps1xml) to load when applied to a session
     [Dscproperty()]
     [string[]] $FormatsToProcess
 
-    ## The optional assemblies to load when applied to a session
     [Dscproperty()]
     [string[]] $AssembliesToLoad
 
-    ## The optional language mode to load
-    ## Can be 'NoLanguage' (recommended), 'RestrictedLanguage', 'ConstrainedLanguage', or 'FullLanguage' (Default)
     [Dscproperty()]
     [string] $LanguageMode
 
-    # The optional ExecutionPolicy
-    # Execution policy to apply when applied to a session
-    # 'Unrestricted', 'RemoteSigned', 'AllSigned', 'Restricted', 'Default', 'Bypass', 'Undefined'
     [Dscproperty()]
     [string] $ExecutionPolicy
 
-    ## The optional number of seconds to wait for registering the endpoint to complete.
-    ## 0 for no timeout
     [Dscproperty()]
     [int] $HungRegistrationTimeout = 10
 
-    # Contains the not compliant properties detected in Get() method.
     [DscProperty(NotConfigurable)]
     [Reason[]]$Reasons
 

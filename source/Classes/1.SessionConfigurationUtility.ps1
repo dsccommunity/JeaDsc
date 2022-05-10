@@ -1,3 +1,8 @@
+<#
+    .DESCRIPTION
+        Parent class for DSC resource JeaSessionConfiguration.
+#>
+
 $script:localizedDataSession = Get-LocalizedData -DefaultUICulture en-US -FileName 'JeaSessionConfiguration.strings.psd1'
 
 class SessionConfigurationUtility
