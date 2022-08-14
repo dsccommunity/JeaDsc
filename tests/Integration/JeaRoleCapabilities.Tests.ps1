@@ -30,7 +30,7 @@ InModuleScope JeaDsc {
                 $class.Path = 'TestDrive:\ModuleFolder\RoleCapabilities\ExampleRole.psrc'
             }
 
-            Context 'Testing Get method when Ensure is Present' {
+            Context 'Testing Get method when Ensure is Present'  {
 
                 It 'Should return an object of JeaRoleCapabilities type' {
                     $null = New-Item -Path $class.Path -Force

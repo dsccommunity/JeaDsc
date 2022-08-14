@@ -229,6 +229,13 @@ class JeaSessionConfiguration:SessionConfigurationUtility
     [Dscproperty()]
     [string[]] $AssembliesToLoad
 
+    ## Enables and disables the session configuration and determines whether it can be used for remote or local sessions on the computer.
+    ## Values can be: Disabled, Local, Remote (Default)
+    [Dscproperty()]
+    [String] $AccessMode = 'Remote'
+
+    ## The optional language mode to load
+    ## Can be 'NoLanguage' (recommended), 'RestrictedLanguage', 'ConstrainedLanguage', or 'FullLanguage' (Default)
     [Dscproperty()]
     [string] $LanguageMode
 
@@ -260,6 +267,8 @@ class JeaSessionConfiguration:SessionConfigurationUtility
             }
         }
 
+        Write-Verbose ("Set(): AccessMode: {0}" -f $this.AccessMode)
+
         ## Register the endpoint
         try
         {
@@ -269,7 +278,7 @@ class JeaSessionConfiguration:SessionConfigurationUtility
                 $breakTheGlassName = 'Microsoft.PowerShell.Restricted'
                 if (-not ($this.GetPSSessionConfiguration($breakTheGlassName)))
                 {
-                    $this.RegisterPSSessionConfiguration($breakTheGlassName, $null, $this.HungRegistrationTimeout)
+                    $this.RegisterPSSessionConfiguration($breakTheGlassName, $null, $this.HungRegistrationTimeout, $this.AccessMode)
                 }
             }
 
@@ -287,7 +296,7 @@ class JeaSessionConfiguration:SessionConfigurationUtility
                 New-PSSessionConfigurationFile @desiredState
 
                 ## Register the configuration file
-                $this.RegisterPSSessionConfiguration($this.Name, $psscPath, $this.HungRegistrationTimeout)
+                $this.RegisterPSSessionConfiguration($this.Name, $psscPath, $this.HungRegistrationTimeout, $this.AccessMode)
             }
         }
         catch
@@ -328,6 +337,12 @@ class JeaSessionConfiguration:SessionConfigurationUtility
             return $false
         }
 
+        # If the AccessMode is not within desired state.
+        if ($currentState.AccessMode -ne $desiredState.AccessMode)
+        {
+            return $false
+        }
+
         $cmdlet = Get-Command -Name New-PSSessionConfigurationFile
         $desiredState = Sync-Parameter -Command $cmdlet -Parameters $desiredState
         $currentState = Sync-Parameter -Command $cmdlet -Parameters $currentState
@@ -357,6 +372,31 @@ class JeaSessionConfiguration:SessionConfigurationUtility
         $CurrentState.Ensure = [Ensure]::Present
 
         $sessionConfiguration = $this.GetPSSessionConfiguration($this.Name)
+
+        #
+        # Determine the AccessMode for the Session Configuration
+
+        if ($sessionConfiguration.Enabled -eq $false)
+        {
+            # If the Session Configuration is Disabled, then it's disabled.
+            $currentState.AccessMode = 'Disabled'
+        }
+        elseif (($sessionConfiguration.Permission -split ', ') -contains 'NT AUTHORITY\NETWORK AccessDenied')
+        {
+            # If the Session Configuration is Enabled and has a 'NT AUTHORITY\NETWORK AccessDenied' SDDL. Then it's local.
+            $currentState.AccessMode = 'Local'
+        }
+        elseif ([String]::IsNullOrEmpty($sessionConfiguration.Permission))
+        {
+            # It's not configured
+            $currentState.AccessMode = 'NotConfigured'
+        }
+        else
+        {
+            # If permissions are present then it's Remote.
+            $currentState.AccessMode = 'Remote'
+        }
+
         if (-not $sessionConfiguration -or -not $sessionConfiguration.ConfigFilePath)
         {
             $currentState.Ensure = [Ensure]::Absent
@@ -404,6 +444,9 @@ class JeaSessionConfiguration:SessionConfigurationUtility
             }
         }
 
+        #
+        # PSSessionConfigurationFile Processing
+
         # Compare current and desired state to add reasons
         $valuesToCheck = $this.psobject.Properties.Name.Where({$_ -notin 'Name','Reasons'})
 
@@ -437,5 +480,6 @@ class JeaSessionConfiguration:SessionConfigurationUtility
         }
 
         return $currentState
+
     }
 }

@@ -33,146 +33,158 @@ class SessionConfigurationUtility
         return $true
     }
 
+    hidden [bool] TestWinRMService()
+    {
+        # Fetch the Service State
+        $winRMService = Get-Service -Name 'WinRM' -ErrorAction SilentlyContinue
+        # If the ServiceExists and the Status is running
+        if ($winRMService -and $winRMService.Status -eq 'Running')
+        {
+            return $true
+        }
+        else
+        {
+            return $false
+        }
+    }
+
     ## Get a PS Session Configuration based on its name
     hidden [object] GetPSSessionConfiguration($Name)
     {
-        $winRMService = Get-Service -Name 'WinRM'
-        if ($winRMService -and $winRMService.Status -eq 'Running')
-        {
-            # Temporary disabling Verbose as xxx-PSSessionConfiguration methods verbose messages are useless for DSC debugging
-            $verbosePreferenceBackup = $Global:VerbosePreference
-            $Global:VerbosePreference = 'SilentlyContinue'
-            $psSessionConfiguration = Get-PSSessionConfiguration -Name $Name -ErrorAction SilentlyContinue
-            $Global:VerbosePreference = $verbosePreferenceBackup
-
-            if ($psSessionConfiguration)
-            {
-                return $psSessionConfiguration
-            }
-            else
-            {
-                return $null
-            }
-        }
-        else
+        # Ensure that the WinRMService is running.
+        if (-not($this.TestWinRMService()))
         {
             Write-Verbose -Message $script:localizedDataSession.WinRMNotRunningGetPsSession
             return $null
         }
+
+        # Temporary disabling Verbose as xxx-PSSessionConfiguration methods verbose messages are useless for DSC debugging
+        $verbosePreferenceBackup = $Global:VerbosePreference
+        $Global:VerbosePreference = 'SilentlyContinue'
+        $psSessionConfiguration = Get-PSSessionConfiguration -Name $Name -ErrorAction SilentlyContinue
+        $Global:VerbosePreference = $verbosePreferenceBackup
+
+        if ($psSessionConfiguration)
+        {
+            return $psSessionConfiguration
+        }
+        else
+        {
+            return $null
+        }
+
     }
 
     ## Unregister a PS Session Configuration based on its name
     hidden [void] UnregisterPSSessionConfiguration($Name)
     {
-        $winRMService = Get-Service -Name 'WinRM'
-        if ($winRMService -and $winRMService.Status -eq 'Running')
-        {
-            # Temporary disabling Verbose as xxx-PSSessionConfiguration methods verbose messages are useless for DSC debugging
-            $verbosePreferenceBackup = $Global:VerbosePreference
-            $Global:VerbosePreference = 'SilentlyContinue'
-            $null = Unregister-PSSessionConfiguration -Name $Name -Force -WarningAction 'SilentlyContinue'
-            $Global:VerbosePreference = $verbosePreferenceBackup
-        }
-        else
+        # Ensure that the WinRMService is running.
+        if (-not($this.TestWinRMService()))
         {
             throw ($script:localizedDataSession.WinRMNotRunningUnRegisterPsSession -f $Name)
         }
+
+        # Temporary disabling Verbose as xxx-PSSessionConfiguration methods verbose messages are useless for DSC debugging
+        $verbosePreferenceBackup = $Global:VerbosePreference
+        $Global:VerbosePreference = 'SilentlyContinue'
+        $null = Unregister-PSSessionConfiguration -Name $Name -Force -WarningAction 'SilentlyContinue'
+        $Global:VerbosePreference = $verbosePreferenceBackup
+
     }
 
     ## Register a PS Session Configuration and handle a WinRM hanging situation
-    hidden [Void] RegisterPSSessionConfiguration($Name, $Path, $Timeout)
+    hidden [Void] RegisterPSSessionConfiguration($Name, $Path, $Timeout, $AccessMode)
     {
-        $winRMService = Get-Service -Name 'WinRM'
-        if ($winRMService -and $winRMService.Status -eq 'Running')
+        # Ensure that the WinRMService is running.
+        if (-not($this.TestWinRMService()))
         {
-            Write-Verbose -Message ($script:localizedDataSession.RegisterPSSessionConfiguration -f $Name,$Path,$Timeout)
-            # Register-PSSessionConfiguration has been hanging because the WinRM service is stuck in Stopping state
-            # therefore we need to run Register-PSSessionConfiguration within a job to allow us to handle a hanging WinRM service
+            throw ($script:localizedDataSession.WinRMNotRunningRegisterPsSession -f $Name)
+        }
 
-            # Save the list of services sharing the same process as WinRM in case we have to restart them
-            $processId = Get-CimInstance -ClassName 'Win32_Service' -Filter "Name LIKE 'WinRM'" | Select-Object -ExpandProperty ProcessId
-            $serviceList = Get-CimInstance -ClassName 'Win32_Service' -Filter "ProcessId=$processId" | Select-Object -ExpandProperty Name
-            foreach ($service in $serviceList.clone())
+        Write-Verbose -Message ($script:localizedDataSession.RegisterPSSessionConfiguration -f $Name,$Path,$AccessMode,$Timeout)
+        # Register-PSSessionConfiguration has been hanging because the WinRM service is stuck in Stopping state
+        # therefore we need to run Register-PSSessionConfiguration within a job to allow us to handle a hanging WinRM service
+
+        # Save the list of services sharing the same process as WinRM in case we have to restart them
+        $processId = Get-CimInstance -ClassName 'Win32_Service' -Filter "Name LIKE 'WinRM'" | Select-Object -ExpandProperty ProcessId
+        $serviceList = Get-CimInstance -ClassName 'Win32_Service' -Filter "ProcessId=$processId" | Select-Object -ExpandProperty Name
+        foreach ($service in $serviceList.clone())
+        {
+            $dependentServiceList = Get-Service -Name $service | ForEach-Object { $_.DependentServices }
+            foreach ($dependentService in $dependentServiceList)
             {
-                $dependentServiceList = Get-Service -Name $service | ForEach-Object { $_.DependentServices }
-                foreach ($dependentService in $dependentServiceList)
+                if ($dependentService.Status -eq 'Running' -and $serviceList -notcontains $dependentService.Name)
                 {
-                    if ($dependentService.Status -eq 'Running' -and $serviceList -notcontains $dependentService.Name)
-                    {
-                        $serviceList += $dependentService.Name
-                    }
+                    $serviceList += $dependentService.Name
                 }
             }
+        }
 
-            if ($Path)
+        if ($Path)
+        {
+            $registerString = "`$null = Register-PSSessionConfiguration -Name '$Name' -Path '$Path' -AccessMode '$AccessMode' -NoServiceRestart -Force -ErrorAction 'Stop' -WarningAction 'SilentlyContinue'"
+        }
+        else
+        {
+            $registerString = "`$null = Register-PSSessionConfiguration -Name '$Name' -AccessMode '$AccessMode' -NoServiceRestart -Force -ErrorAction 'Stop' -WarningAction 'SilentlyContinue'"
+        }
+
+        $registerScriptBlock = [scriptblock]::Create($registerString)
+
+        if ($Timeout -gt 0)
+        {
+            $job = Start-Job -ScriptBlock $registerScriptBlock
+            Wait-Job -Job $job -Timeout $Timeout
+            Receive-Job -Job $job
+            Remove-Job -Job $job -Force -ErrorAction 'SilentlyContinue'
+
+            # If WinRM is still Stopping after the job has completed / exceeded $Timeout, force kill the underlying WinRM process
+            $winRMService = Get-Service -Name 'WinRM'
+            if ($winRMService -and $winRMService.Status -eq 'StopPending')
             {
-                $registerString = "`$null = Register-PSSessionConfiguration -Name '$Name' -Path '$Path' -NoServiceRestart -Force -ErrorAction 'Stop' -WarningAction 'SilentlyContinue'"
-            }
-            else
-            {
-                $registerString = "`$null = Register-PSSessionConfiguration -Name '$Name' -NoServiceRestart -Force -ErrorAction 'Stop' -WarningAction 'SilentlyContinue'"
-            }
-
-            $registerScriptBlock = [scriptblock]::Create($registerString)
-
-            if ($Timeout -gt 0)
-            {
-                $job = Start-Job -ScriptBlock $registerScriptBlock
-                Wait-Job -Job $job -Timeout $Timeout
-                Receive-Job -Job $job
-                Remove-Job -Job $job -Force -ErrorAction 'SilentlyContinue'
-
-                # If WinRM is still Stopping after the job has completed / exceeded $Timeout, force kill the underlying WinRM process
-                $winRMService = Get-Service -Name 'WinRM'
-                if ($winRMService -and $winRMService.Status -eq 'StopPending')
+                $processId = Get-CimInstance -ClassName 'Win32_Service' -Filter "Name LIKE 'WinRM'" | Select-Object -ExpandProperty ProcessId
+                Write-Verbose -Message ($script:localizedDataSession.ForcingProcessToStop -f $processId)
+                $failureList = @()
+                try
                 {
-                    $processId = Get-CimInstance -ClassName 'Win32_Service' -Filter "Name LIKE 'WinRM'" | Select-Object -ExpandProperty ProcessId
-                    Write-Verbose -Message ($script:localizedDataSession.ForcingProcessToStop -f $processId)
-                    $failureList = @()
-                    try
+                    # Kill the process hosting WinRM service
+                    Stop-Process -Id $processId -Force
+                    Start-Sleep -Seconds 5
+                    Write-Verbose -Message ($script:localizedDataSession.RegisterPSSessionConfiguration -f $($serviceList -join ', '))
+                    # Then restart all services previously identified
+                    foreach ($service in $serviceList)
                     {
-                        # Kill the process hosting WinRM service
-                        Stop-Process -Id $processId -Force
-                        Start-Sleep -Seconds 5
-                        Write-Verbose -Message ($script:localizedDataSession.RegisterPSSessionConfiguration -f $($serviceList -join ', '))
-                        # Then restart all services previously identified
-                        foreach ($service in $serviceList)
+                        try
                         {
-                            try
-                            {
-                                Start-Service -Name $service
-                            }
-                            catch
-                            {
-                                $failureList += $script:localizedDataSession.FailureListStartService -f $service
-                            }
+                            Start-Service -Name $service
+                        }
+                        catch
+                        {
+                            $failureList += $script:localizedDataSession.FailureListStartService -f $service
                         }
                     }
-                    catch
-                    {
-                        $failureList += $script:localizedDataSession.FailureListKillWinRMProcess
-                    }
-
-                    if ($failureList)
-                    {
-                        Write-Verbose -Message ($script:localizedDataSession.FailureListKillWinRMProcess -f $($failureList -join ', '))
-                    }
                 }
-                elseif ($winRMService -and $winRMService.Status -eq 'Stopped')
+                catch
                 {
-                    Write-Verbose -Message $script:localizedDataSession.RestartWinRM
-                    Start-Service -Name 'WinRM'
+                    $failureList += $script:localizedDataSession.FailureListKillWinRMProcess
+                }
+
+                if ($failureList)
+                {
+                    Write-Verbose -Message ($script:localizedDataSession.FailureListKillWinRMProcess -f $($failureList -join ', '))
                 }
             }
-            else
+            elseif ($winRMService -and $winRMService.Status -eq 'Stopped')
             {
-                Invoke-Command -ScriptBlock $registerScriptBlock
+                Write-Verbose -Message $script:localizedDataSession.RestartWinRM
+                Start-Service -Name 'WinRM'
             }
         }
         else
         {
-            throw ($script:localizedDataSession.WinRMNotRunningRegisterPsSession -f $Name)
+            Invoke-Command -ScriptBlock $registerScriptBlock
         }
+
     }
 
 }

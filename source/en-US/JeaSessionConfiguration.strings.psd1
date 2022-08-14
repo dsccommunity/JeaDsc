@@ -5,7 +5,7 @@ ConvertFrom-StringData @'
     WinRMNotRunningUnRegisterPsSession                              = WinRM service is not running. Cannot unregister PS Session Configuration '{0}'. (JSC0004)
     WinRMNotRunningRegisterPsSession                                = WinRM service is not running. Cannot register PS Session Configuration '{0}'. (JSC0005)
     NotDefinedGMSaAndVirtualAccount                                 = 'GroupManagedServiceAccount' and 'RunAsVirtualAccount' are not defined, setting 'RunAsVirtualAccount' to 'true'. (JSC0006)
-    RegisterPSSessionConfiguration                                  = Will register PSSessionConfiguration with argument: Name = '{0}', Path = '{1}' and Timeout = '{2}' (JSC0007)
+    RegisterPSSessionConfiguration                                  = Will register PSSessionConfiguration with argument: Name = '{0}', Path = '{1}', AccessMode = '{2}' and Timeout = '{3}' (JSC0007)
     ForcingProcessToStop                                            = WinRM seems hanging in Stopping state. Forcing process {0} to stop. (JSC0008)
     RestartingServices                                              = "Restarting services: {0} (JSC0009)
     FailureListStartService                                         = Start service {0} (JSC0010)
