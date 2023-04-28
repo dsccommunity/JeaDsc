@@ -28,6 +28,7 @@ InModuleScope JeaDsc {
             BeforeEach {
                 $class = [JeaRoleCapabilities]::New()
                 $class.Path = 'TestDrive:\ModuleFolder\RoleCapabilities\ExampleRole.psrc'
+                $class.VisibleCmdlets = 'Get-Command'
             }
 
             Context 'Testing Get method when Ensure is Present' {
