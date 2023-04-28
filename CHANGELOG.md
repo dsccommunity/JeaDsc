@@ -31,6 +31,8 @@ Based on [style guidelines](https://dsccommunity.org/styleguidelines/localizatio
   in the future.
 - The HQRM tests was run twice in the pipeline, now they are run just once.
 - Updated the README.md with new section and updated the links.
+- Renamed class files adding a prefix on each file so the task `Generate_Wiki_Content`
+  works (reported issue https://github.com/dsccommunity/DscResource.DocGenerator/issues/132).
 
 ### Removed
 
