@@ -25,8 +25,9 @@ stages:
       - job: Package_Module
         displayName: 'Package Module'
         pool:
-          vmImage: 'ubuntu-latest'
+          vmImage: 'windows-latest'
         steps:
+
           - pwsh: |
               dotnet tool install --global GitVersion.Tool
               $gitVersionObject = dotnet-gitversion | ConvertFrom-Json
@@ -36,15 +37,17 @@ stages:
               }
               Write-Host -Object "##vso[build.updatebuildnumber]$($gitVersionObject.FullSemVer)"
             displayName: Calculate ModuleVersion (GitVersion)
+
           - task: PowerShell@2
             name: package
             displayName: 'Build & Package Module'
             inputs:
               filePath: './build.ps1'
               arguments: '-ResolveDependency -tasks pack'
-              pwsh: true
+              pwsh: false
             env:
               ModuleVersion: $(NuGetVersionV2)
+
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Build Artifact'
             inputs:
@@ -68,6 +71,7 @@ stages:
               buildType: 'current'
               artifactName: $(buildArtifactName)
               targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)'
+
           - task: PowerShell@2
             name: test
             displayName: 'Run HQRM Test'
@@ -75,6 +79,7 @@ stages:
               filePath: './build.ps1'
               arguments: '-Tasks hqrmtest'
               pwsh: false
+
           - task: PublishTestResults@2
             displayName: 'Publish Test Results'
             condition: succeededOrFailed()
@@ -95,6 +100,7 @@ stages:
               buildType: 'current'
               artifactName: $(buildArtifactName)
               targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)'
+
           - task: PowerShell@2
             name: test
             displayName: 'Run Unit Test'
@@ -102,6 +108,7 @@ stages:
               filePath: './build.ps1'
               arguments: "-Tasks test -PesterScript 'tests/Unit'"
               pwsh: false
+
           - task: PublishTestResults@2
             displayName: 'Publish Test Results'
             condition: succeededOrFailed()
@@ -109,6 +116,7 @@ stages:
               testResultsFormat: 'NUnit'
               testResultsFiles: '$(buildFolderName)/$(testResultFolderName)/NUnit*.xml'
               testRunTitle: 'Unit'
+
           - task: PublishPipelineArtifact@1
             displayName: 'Publish Test Artifact'
             inputs:
@@ -128,6 +136,7 @@ stages:
               buildType: 'current'
               artifactName: $(buildArtifactName)
               targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)'
+
           - task: PowerShell@2
             name: configureWinRM
             displayName: 'Configure WinRM'
@@ -135,9 +144,11 @@ stages:
               targetType: 'inline'
               script: 'winrm quickconfig -quiet'
               pwsh: false
+
           - powershell: |
               Set-Service -Name wuauserv -StartupType Manual -Verbose
               Start-Service -name wuauserv -Verbose
+
           - task: PowerShell@2
             name: test
             displayName: 'Run Integration Test'
@@ -145,6 +156,7 @@ stages:
               filePath: './build.ps1'
               arguments: "-Tasks test -CodeCoverageThreshold 0 -PesterScript 'tests/Integration'"
               pwsh: false
+
           - task: PublishTestResults@2
             displayName: 'Publish Test Results'
             condition: succeededOrFailed()
@@ -166,12 +178,14 @@ stages:
               buildType: 'current'
               artifactName: $(buildArtifactName)
               targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)'
+
           - task: DownloadPipelineArtifact@2
             displayName: 'Download Test Artifact'
             inputs:
               buildType: 'current'
               artifactName: $(testArtifactName)
               targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)'
+
           - task: PublishCodeCoverageResults@1
             displayName: 'Publish Code Coverage to Azure DevOps'
             condition: succeededOrFailed()
@@ -179,6 +193,7 @@ stages:
               codeCoverageTool: 'JaCoCo'
               summaryFileLocation: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/JaCoCo_coverage.xml'
               pathToSources: '$(Build.SourcesDirectory)/$(sourceFolderName)/'
+
           - script: |
               bash <(curl -s https://codecov.io/bash) -f "./$(buildFolderName)/$(testResultFolderName)/JaCoCo_coverage.xml"
             displayName: 'Publish Code Coverage to Codecov.io'
@@ -206,6 +221,7 @@ stages:
               buildType: 'current'
               artifactName: $(buildArtifactName)
               targetPath: '$(Build.SourcesDirectory)/$(buildArtifactName)'
+
           - task: PowerShell@2
             name: publishRelease
             displayName: 'Publish Release'
@@ -218,6 +234,7 @@ stages:
               GalleryApiToken: $(GalleryApiToken)
               ReleaseBranch: $(defaultBranch)
               MainGitBranch: $(defaultBranch)
+
           - task: PowerShell@2
             name: sendChangelogPR
             displayName: 'Send Changelog PR'

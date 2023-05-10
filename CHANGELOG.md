@@ -33,6 +33,7 @@ Based on [style guidelines](https://dsccommunity.org/styleguidelines/localizatio
 - Updated the README.md with new section and updated the links.
 - Renamed class files adding a prefix on each file so the task `Generate_Wiki_Content`
   works (reported issue https://github.com/dsccommunity/DscResource.DocGenerator/issues/132).
+- Removed code of `ConvertTo-Expression` and injecting it from https://github.com/iRon7/ConvertTo-Expression.
 
 ### Removed
 

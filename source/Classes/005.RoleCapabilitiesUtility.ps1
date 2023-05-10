@@ -8,6 +8,9 @@ $modulePath = Join-Path -Path $PSScriptRoot -ChildPath Modules
 Import-Module -Name (Join-Path -Path $modulePath -ChildPath DscResource.Common)
 Import-Module -Name (Join-Path -Path $modulePath -ChildPath (Join-Path -Path JeaDsc.Common -ChildPath JeaDsc.Common.psm1))
 
+Import-Module -Name (Join-Path -Path $modulePath -ChildPath ConvertToExpression)
+Import-Module -Name (Join-Path -Path $modulePath -ChildPath (Join-Path -Path ConvertToExpression -ChildPath ConvertToExpression.psm1))
+
 $script:localizedDataRole = Get-LocalizedData -DefaultUICulture en-US -FileName 'JeaRoleCapabilities.strings.psd1'
 
 class RoleCapabilitiesUtility

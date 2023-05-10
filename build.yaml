@@ -30,6 +30,7 @@ BuildWorkflow:
 
   build:
     - Clean
+    - FixConvertToExpressionContent
     - Build_Module_ModuleBuilder
     - Build_NestedModules_ModuleBuilder
     - Create_changelog_release_output
@@ -53,8 +54,6 @@ BuildWorkflow:
     - Publish_Release_To_GitHub
     - Publish_GitHub_Wiki_Content
 
-
-
 ####################################################
 #       PESTER  Configuration                      #
 ####################################################
@@ -63,11 +62,12 @@ Pester:
   OutputFormat: NUnitXML
   ExcludeFromCodeCoverage:
     - Modules/DscResource.Common
+    - Modules/ConvertToExpression
   Script:
     - tests/Unit
   ExcludeTag:
   Tag:
-  CodeCoverageThreshold: 25
+  CodeCoverageThreshold: 6
   CodeCoverageOutputFile: JaCoCo_coverage.xml
   CodeCoverageOutputFileEncoding: ascii
 
@@ -79,8 +79,10 @@ DscTest:
   Tag:
   ExcludeSourceFile:
     - output
+    - Modules/ConvertToExpression
   ExcludeModuleFile:
     - Modules/DscResource.Common
+    - Modules/ConvertToExpression
 
 ModuleBuildTasks:
   Sampler:

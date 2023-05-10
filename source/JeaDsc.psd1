@@ -18,9 +18,7 @@
 
     NestedModules        = @()
 
-    FunctionsToExport    = @(
-        'ConvertTo-Expression'
-    )
+    FunctionsToExport    = @()
 
     CmdletsToExport      = @()
 
